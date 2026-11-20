@@ -1,0 +1,48 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Local private assessment source — included in the owner ZIP only
+reference/
+private/
+assessment-fixtures.local.*
+
+# Databases and runtime data
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+backend/data/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Frontend
+node_modules/
+dist/
+coverage/
+
+# Logs, local models, temporary benchmarks and recordings
+*.log
+logs/
+ollama-cache/
+recordings/
+screenshots/private/
+test_ollama.py
+
+# Raw internal review evidence (may contain private employer fixture details or local paths)
+reviews/*FULL_REPORT*
+reviews/INITIAL_BLUEPRINT_AUDIT*
+
+# Scratch scripts and temporary evidence
+scratch/
