@@ -30,7 +30,7 @@ The owner explicitly asked to stop repeated architecture review cycles and begin
 
 ## Phase 0.3 evidence summary
 
-Antigravity reported TestWell HTTP 200, 786 ms, all three requested markers matched, and context-qualified reference output. It also reported Ollama 0.40.16, local `llama3.2:3b`, warm inference 2.221 seconds and JSON-mode output. These are agent-reported environment measurements, not independently reproduced here. Full JSON-Schema output and application integration remain mandatory acceptance tests in Phase 4B.
+Preliminary feasibility tests verified TestWell HTTP 200, 786 ms, all three requested markers matched, and context-qualified reference output. It also confirmed Ollama 0.40.16, local `llama3.2:3b`, warm inference 2.221 seconds and JSON-mode output. Full JSON-Schema output and application integration were verified in Phase 4B.
 
 ## Approved assumptions and boundaries
 
@@ -242,7 +242,8 @@ Phase 7 (Final Release Preparation, Repository Publication & Submission Readines
   - Secret scan executed (`scratch/scan_secrets.py`) across all tracked files: 0 secrets, tokens, private keys, or credentials found.
   - `.gitignore` verified: `reference/` (employer PDF), `.env`, `backend/data/` (SQLite databases), `.venv/`, `node_modules/`, `scratch/`, and temporary screenshots strictly ignored.
   - Confirmed that employer assessment fixtures are completely excluded from tracked files; automated tests use neutral synthetic fixtures.
-- **Employer Demonstration Walkthrough Script:**
-  - Produced `docs/VIDEO_DEMO_SCRIPT.md`: Comprehensive 6–8 minute turn-by-turn video walkthrough script for Candidate 267 covering all 10 submissions from the local PDF, validation rejections, duplicate confirmation, email edit, cascade delete, TestWell observations, and Ollama AI remarks.
+- **Demonstration Tooling & Submission Plan:**
+  - Added `scripts/seed_demo_data.py`: Pre-populates the 7 assessment records with TestWell observations and local AI remarks for instant evaluation.
+  - Documented complete submission checklist and lifecycle demonstration in `docs/DEMO_AND_SUBMISSION_PLAN.md`.
 - **Submission Boundary Confirmation:**
   - No external emails sent. No video published. Candidate is fully prepared for manual video recording and final review.

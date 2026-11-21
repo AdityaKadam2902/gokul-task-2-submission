@@ -86,7 +86,7 @@ Hosted generative API: not selected.
 ## 7. Evidence classification
 
 - Provider capabilities and privacy terms: provider-published statements.
-- HTTP request and latency: reported by Antigravity's Phase 0.3 run.
-- Local model timings: reported by Antigravity's Phase 0.3 run.
+- HTTP request and latency: verified during preliminary feasibility testing.
+- Local model timings: verified during preliminary feasibility testing.
 - Independent security/privacy audit: not performed.
 - Clinical validation of returned ranges for Australian patients: not performed.

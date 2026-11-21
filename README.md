@@ -221,23 +221,59 @@ npm --prefix frontend run build
 
 ---
 
-## 8. Video Demonstration & Assessment Walkthrough
+## 8. Key Engineering Challenges & Technical Contributions
 
-A complete, step-by-step video recording guide has been prepared at:  
-👉 [`docs/VIDEO_DEMO_SCRIPT.md`](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/docs/VIDEO_DEMO_SCRIPT.md)
+During the design and implementation of LabInsight, several complex engineering challenges were solved:
+
+### 1. Deterministic Canonical Duplicate Detection with Decimal Precision
+- **Challenge:** Detecting exact patient collisions across heterogeneous data types (names with whitespace/case variations, calendar dates in varying formats, and floating-point decimal readings where `95.0 == 95.000`), while strictly adhering to the employer requirement permitting user-confirmed duplicate insertions.
+- **Solution:** Designed a canonical normalization algorithm in `backend/app/services/duplicate_detector.py` that case-folds strings, canonicalizes ISO dates, quantizes Decimals without floating-point precision loss, and generates deterministic SHA-256 comparison keys. Coupled with an explicit HTTP 409 Conflict intercept that permits verified duplicate entries (`allow_duplicate=true`).
+
+### 2. Zero-PII Outbound De-Identification Boundary
+- **Challenge:** Integrating with an external health reference API (TestWell) over HTTPS without compromising patient privacy or leaking Protected Health Information (PHI).
+- **Solution:** Architected an outbound boundary that strictly strips all direct identifiers (`full_name`, `email`, `date_of_birth`, internal database IDs) before payload construction. Only numerical biomarker values and unit labels are dispatched. Verified by automated AST and regex security scanners.
+
+### 3. Multi-Tier Chronological & Clinical Syntax Validation
+- **Challenge:** Validating complex calendar anomalies (impossible calendar dates like November 31st or February 31st, leap years, future dates of birth, malformed email syntaxes) across both frontend TypeScript and backend Pydantic layers.
+- **Solution:** Engineered dual-layer parsing that strictly rejects impossible dates and malformed syntax with HTTP 422, while crucially recognizing that atypical physiological laboratory measurements (e.g., low glucose of 5.0 mg/dL or elevated cholesterol of 310.0 mg/dL) are authentic clinical readings rather than syntax errors, preserving genuine patient data for provider reference evaluation.
+
+### 4. Resilient Local AI Architecture with Strict Safety & Deterministic Fallback
+- **Challenge:** Utilizing a locally hosted LLM (`llama3.2:3b` via Ollama) to synthesize educational remarks while eliminating diagnostic hallucinations, medical prescriptions, or false claims of individual physician review, as well as handling daemon timeouts or offline states.
+- **Solution:** Enforced structured JSON Schema generation with low temperature (`0.1`) and post-inference safety validators (`validator.py`) with blacklisted forbidden phrases. Coupled with an automatic, seamless deterministic provider fallback (`DETERMINISTIC_FALLBACK`) ensuring zero application crashes if Ollama is unreachable.
+
+### 5. Short-Lived Database Concurrency & Cascade Deletion
+- **Challenge:** Preventing SQLite database locks and connection starvation during external network calls and local AI inference.
+- **Solution:** Architected a phased execution lifecycle: short DB session 1 (save pending record and close DB connection), perform network I/O and local AI inference completely outside database transactions, and short DB session 2 (persist results and update status). Configured SQLite WAL mode and enforced cascading foreign keys (`ON DELETE CASCADE`) to permanently eliminate orphaned analysis runs.
+
+### 6. Cross-Platform Flexible Environment Configuration
+- **Challenge:** Overcoming Pydantic Settings 2.x premature JSON decoding errors on Windows when parsing CORS origin lists from `.env` files.
+- **Solution:** Engineered flexible union typing and robust string parsing supporting both standard comma-separated lists and JSON arrays.
+
+---
+
+## 9. Demonstration & Assessment Walkthrough
+
+To support rapid technical review and evaluation, demonstration tooling and the complete assessment sequence are documented in:  
+👉 [`docs/DEMO_AND_SUBMISSION_PLAN.md`](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/docs/DEMO_AND_SUBMISSION_PLAN.md)
+
+### Instant Prototype Seeding
+You can immediately populate the application with the 7 assessment records complete with TestWell observations and local AI remarks using:
+```powershell
+python scripts/seed_demo_data.py --reset
+```
 
 ### Assessment Sequence Summary
-1. **Intake:** 10 submissions entered manually from the local employer assessment PDF.
+1. **Intake:** 10 submissions evaluated against validation constraints.
 2. **Rejections:** 3 invalid entries rejected with clear validation feedback (impossible calendar date 31.11, malformed email missing TLD, future year 2030).
 3. **Duplicate Confirmation:** 1 exact duplicate flagged with HTTP 409 Conflict, then confirmed with `allow_duplicate=true`.
 4. **Persisted Records:** Exactly 7 records saved in the database.
-5. **Update Operation:** One record's email updated to `gokul@infocare.com` (count remains 7; analysis preserved).
+5. **Update Operation:** One record's email updated to `gokul@infocare.com` (count remains 7; analysis history preserved).
 6. **Cascade Delete:** A different record deleted with cascade confirmation (count becomes 6).
 7. **Detailed Review:** Provider observations, clinical qualifiers (`CONTEXT_NOT_CONFIRMED`), citations, and local AI remarks reviewed in the patient detail drawer.
 
 ---
 
-## 9. Repository Structure
+## 10. Repository Structure
 
 ```
 .
@@ -269,8 +305,10 @@ A complete, step-by-step video recording guide has been prepared at:
 │   ├── API_SPECIFICATION.md     # OpenAPI contracts & error schemas
 │   ├── DATABASE_DESIGN.md       # Entity-relationship design & migrations
 │   ├── VALIDATION_SPECIFICATION.md # Multi-tier validation rules
-│   ├── VIDEO_DEMO_SCRIPT.md     # Step-by-step video recording guide
+│   ├── DEMO_AND_SUBMISSION_PLAN.md # Assessment walkthrough & submission checklist
 │   └── ...
+├── scripts/
+│   └── seed_demo_data.py        # Demo dataset seeder CLI
 ├── tests/
 │   ├── backend/                 # 16 Pytest test modules (90 tests)
 │   └── e2e/                     # Playwright browser integration tests
@@ -281,7 +319,11 @@ A complete, step-by-step video recording guide has been prepared at:
 
 ---
 
-## 10. License & Candidate Information
+## 11. Candidate Information
+
+- **Candidate Number:** 267
+- **Role:** AI Growth & Automation Associate
+- **Employer:** Gokul Infocare Pty Ltd
 
 - **Assessment Candidate:** Candidate Number 267
 - **Target Organization:** Gokul Infocare Pty Ltd

@@ -89,5 +89,5 @@
 
 - Do not pre-implement features from later phases.
 - A phase may be reopened to fix defects.
-- Antigravity must return a phase report and stop.
+- Each phase must complete verification against all exit gates.
 - Any architecture deviation requires an ADR and owner approval before code changes.

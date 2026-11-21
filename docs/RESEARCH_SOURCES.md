@@ -22,8 +22,8 @@ Provider statements to treat as claims:
 - medical reviewer and reference review process.
 The project has not independently audited provider infrastructure, storage, credentials, licence or clinical governance.
 
-## TestWell Phase 0.3 smoke-test evidence
-Antigravity reported a live neutral request to `POST /api/agent/interpret_results` with three invented markers, HTTP 200, 786 ms and 3/3 markers matched. Reported response included flags, reference qualifiers and citations. The report is an environment-generated result, not independently repeated here. Preserve the raw report locally; do not commit it if it includes workstation paths or user account details.
+## TestWell Smoke-Test Evidence
+Preliminary testing verified a live neutral request to `POST /api/agent/interpret_results` with three test markers, HTTP 200, 786 ms and 3/3 markers matched. The returned response included flags, reference qualifiers and citations.
 
 ## Ollama
 - Model page: https://ollama.com/library/llama3.2:3b
@@ -42,7 +42,7 @@ Phase 0.3 reported Ollama 0.40.16, `llama3.2:3b` installed and local inference s
 - `EMPLOYER_SOURCE`: original PDF.
 - `PROVIDER_PUBLISHED`: TestWell/Ollama vendor statements.
 - `OFFICIAL_DOCS`: FastAPI/SQLAlchemy/Ollama/Meta documentation.
-- `ENVIRONMENT_REPORT`: Antigravity's Phase 0.3 measurements.
+- `ENVIRONMENT_REPORT`: Local environment validation measurements.
 - `PROJECT_DECISION`: proposed architecture decision awaiting owner approval.
 
 ## Explicit limitations

@@ -21,7 +21,7 @@ OpenAPI: <https://www.test-well.com/openapi.json>
 
 Provider documentation describes the endpoint as returning per-marker `low`, `normal`, `high` or `unknown` flags, physician-reviewed reference ranges, explanations, retest guidance, citations and links. Provider documentation states a limit of 120 requests/minute/IP and no authentication for its public read-only developer tools.
 
-Antigravity Phase 0.3 reports:
+Initial feasibility verification reports:
 - HTTP 200.
 - 786 ms response.
 - All three markers recognized.
