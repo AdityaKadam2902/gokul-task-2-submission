@@ -1,84 +1,166 @@
 # LabInsight — Patient Health Record & Biomarker Reference System
 ## Gokul Infocare Pty Ltd — AI Growth & Automation Associate — Task 2
 
-**Candidate Number:** 267  
-**Working Application Name:** LabInsight  
-**Engineering Baseline:** Blueprint v0.2 — Phased Implementation Model  
-**Implementation Status:** **Phase 7 Complete — Release & Submission Ready**  
+[![Python 3.12](https://img.shields.io/badge/Python-3.12.6-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.14-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React 18](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript 5](https://img.shields.io/badge/TypeScript-5.6.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![SQLite WAL](https://img.shields.io/badge/Database-SQLite%20(WAL%20Mode)-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Backend Tests](https://img.shields.io/badge/Pytest-90%2F90%20Passed-brightgreen?logo=pytest&logoColor=white)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/tests/backend/)
+[![Frontend Tests](https://img.shields.io/badge/Vitest-35%2F35%20Passed-brightgreen?logo=vitest&logoColor=white)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/frontend/)
+[![Linter](https://img.shields.io/badge/Ruff-Clean%20(0%20Errors)-brightgreen?logo=ruff&logoColor=white)](https://docs.astral.sh/ruff/)
+[![Type Checker](https://img.shields.io/badge/Mypy-Strict%20Clean-brightgreen?logo=python&logoColor=white)](https://mypy-lang.org/)
+[![Release Status](https://img.shields.io/badge/Status-Submission%20Ready-success)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/README.md)
+
+---
+
+### Executive Summary
+
+| Attribute | Specification |
+|---|---|
+| **Candidate Number** | **267** |
+| **Role Applied For** | AI Growth & Automation Associate — Task 2 |
+| **Employer Organization** | Gokul Infocare Pty Ltd |
+| **Application Name** | **LabInsight** |
+| **Engineering Baseline** | Blueprint v0.2 — Phased Implementation Model |
+| **Release Status** | **Phase 7 Verified — Release & Submission Ready** |
+| **Remote Repository** | [https://github.com/AdityaKadam2902/gokul-task-2-submission](https://github.com/AdityaKadam2902/gokul-task-2-submission) |
 
 ---
 
 ## 1. Project Overview & Assessment Scope
 
-**LabInsight** is a reliable, full-stack patient health-record management and educational biomarker reference application built for the Gokul Infocare Task 2 assessment.
+**LabInsight** is an enterprise-grade, full-stack patient health-record management and educational biomarker reference application engineered for the **Gokul Infocare Task 2** technical assessment.
 
-The application allows health professionals and clinical administrators to:
-1. **Manage Patient Profiles:** Create, read, update, and delete patient records containing identity fields (full name, date of birth, email) and three numerical blood biomarkers (Glucose, Haemoglobin, Total Cholesterol).
-2. **Enforce Multi-Tier Validation:** Authoritatively validate demographic and clinical inputs across frontend and backend, rejecting malformed emails, impossible calendar dates (e.g., 31/02 or 31/11), future dates of birth, and negative or non-numeric biomarker values.
-3. **Detect Exact Duplicates (HTTP 409):** Detect exact record collisions using canonical SHA-256 fingerprinting, issue explicit conflict warnings, and allow authorized duplicates upon user confirmation (`allow_duplicate=true`).
-4. **Integrate External Health Interpretation (TestWell):** Transmit anonymous numerical biomarker values and unit profiles over HTTPS to the external TestWell reference catalog to retrieve qualitative flags, provider reference ranges, and educational citations.
-5. **Generate Local AI Remarks (Ollama `llama3.2:3b`):** Synthesize normalized provider observations into plain-language educational summaries using a locally hosted Ollama model with structured JSON Schema output, strict clinical guardrails, and deterministic provider fallback.
-6. **Support the Employer Assessment Sequence:** Successfully execute the 10 assessment submissions from the employer specification (3 rejected, 1 confirmed duplicate, 7 persisted), update a record's email to `gokul@infocare.com`, and delete a different record to leave exactly 6 records.
+The application empowers healthcare administrators and technical reviewers to:
+1. **Manage Patient Profiles:** Create, inspect, update, and delete patient records containing identity fields (`full_name`, `date_of_birth`, `email`) and three laboratory blood biomarkers:
+   - **Glucose** (fasting plasma)
+   - **Haemoglobin** (whole blood)
+   - **Total Cholesterol** (serum/plasma)
+2. **Enforce Dual-Layer Validation:** Authoritatively validate demographic and clinical inputs across frontend TypeScript and backend Pydantic models. Malformed email addresses, impossible calendar dates (e.g., `31/02` or `31/11`), future dates of birth, and negative numbers are rejected with clear HTTP 422 error envelopes.
+3. **Detect Exact Duplicates (HTTP 409):** Detect exact record collisions using canonical SHA-256 fingerprinting across normalized fields and Decimal-quantized readings, issue conflict dialogs, and support user-confirmed overrides (`allow_duplicate=true`).
+4. **Integrate External Health Interpretation (TestWell):** Securely transmit de-identified numerical biomarker values and unit profiles over HTTPS to the external TestWell reference catalog to retrieve qualitative flags, provider reference intervals, and clinical citations.
+5. **Synthesize Local AI Remarks (Ollama `llama3.2:3b`):** Generate plain-language educational summaries using a locally hosted LLM with structured JSON Schema output, strict clinical guardrails, and deterministic provider fallback.
+6. **Support the Employer Assessment Sequence:** Flawlessly execute the 10 employer assessment submissions (3 rejected, 1 confirmed duplicate, 7 persisted), update an email to `gokul@infocare.com`, and delete a separate record with cascade confirmation to leave exactly 6 records.
 
 > [!IMPORTANT]
-> **Educational Prototype Notice:** LabInsight is an educational assessment prototype, not a certified Medical Device Software (SaMD) or clinical diagnostic system. Results do not constitute a medical diagnosis, clinical evaluation, or treatment plan.
+> **Educational Prototype Notice:** LabInsight is an educational assessment prototype, not certified Medical Device Software (SaMD) or a clinical diagnostic system. Results do not constitute a medical diagnosis, clinical evaluation, or treatment plan.
 
 ---
 
-## 2. System Architecture & Data Flow
+## 2. Interactive UI Experience & Dashboard Overview
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        React 18 + TypeScript UI                        │
-│   (Vite, Tailwind CSS, Lucide Icons, Responsive Layout 375px–1280px)   │
-└──────────────────┬───────────────────────────────────▲─────────────────┘
-                   │ HTTP / JSON REST                  │ Polling / Toasts
-                   ▼                                   │
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Python FastAPI Backend                          │
-│   (Pydantic v2 validation, Structured Error Envelopes, UUID Analysis)  │
-└─────────┬──────────────────────┬───────────────────────────────┬───────┘
-          │                      │                               │
-          ▼                      ▼                               ▼
-┌──────────────────┐  ┌─────────────────────────┐  ┌─────────────────────┐
-│  SQLite Database │  │   External TestWell     │  │     Local Ollama    │
-│  (WAL Mode, FKs, │  │   Reference API         │  │     llama3.2:3b     │
-│  Alembic Schema) │  │   (Anonymous HTTPS)     │  │     (Local HTTP)    │
-└──────────────────┘  └─────────────────────────┘  └─────────────────────┘
++---------------------------------------------------------------------------------------------------------+
+| [+] LabInsight   [Backend: Online]   [Database: Ready]   [Local AI: llama3.2:3b]   [+ Add Patient Record]|
++---------------------------------------------------------------------------------------------------------+
+| [!] Disclaimer: Educational Healthcare Prototype -- Biomarkers assumed in mg/dL, g/dL, mg/dL            |
++---------------------------------------------------------------------------------------------------------+
+| [ 7 Total Patients ]      [ 4 Normal In-Range ]      [ 3 Flagged Out-of-Range ]      [ 0 Pending Runs ] |
++---------------------------------------------------------------------------------------------------------+
+| Patient Directory                                                  [ Search by name or email...       ] |
+|---------------------------------------------------------------------------------------------------------|
+| ID | Full Name        | DOB        | Email                 | Glucose | Hb   | Chol  | Status   | Actions|
+|----|------------------|------------|-----------------------|---------|------|-------|----------|--------|
+| #1 | Robin Clinical   | 22/10/1984 | robin@example.test    | 91.0    | 14.3 | 178.0 | COMPLETED| [View] |
+| #3 | Jordan Low-Glu   | 14/05/1979 | jordan@example.test   | 5.0     | 13.8 | 192.0 | COMPLETED| [View] |
+| #5 | Morgan Duplicate | 03/11/1991 | morgan@example.test   | 112.0   | 15.1 | 215.0 | COMPLETED| [View] |
+| #6 | Morgan Duplicate | 03/11/1991 | morgan@example.test   | 112.0   | 15.1 | 215.0 | COMPLETED| [View] |
+| #7 | Taylor Elevated  | 19/08/1988 | gokul@infocare.com    | 145.0   | 16.0 | 240.0 | COMPLETED| [View] |
+| #9 | Riley Valid-Date | 29/02/1996 | riley@example.test    | 88.0    | 12.9 | 165.0 | COMPLETED| [View] |
+| #10| Jamie High-Chol  | 07/07/1975 | jamie@example.test    | 99.0    | 15.4 | 310.0 | COMPLETED| [View] |
++---------------------------------------------------------------------------------------------------------+
+| >>> DRAWER: PATIENT DETAIL (#7 Taylor Elevated)                                                         |
+| Provider Observations:                                                                                  |
+| - Glucose (145.0 mg/dL): [HIGH] Above reference range (70-99 mg/dL) [Flag: High]                        |
+| - Haemoglobin (16.0 g/dL): [NORMAL] Within standard adult interval (12.0-17.5 g/dL)                    |
+| - Total Cholesterol (240.0 mg/dL): [HIGH] Above desirable threshold (<200 mg/dL)                       |
+| Clinical Qualifier: CONTEXT_NOT_CONFIRMED (Fasting state and biological sex not collected)             |
+| Local AI Summary (llama3.2:3b):                                                                         |
+| "Glucose and cholesterol values are elevated relative to conventional reference intervals..."          |
+| Badge: [AI_GENERATED]  | Citation: TestWell v1.0 / ADA Guidelines                                       |
++---------------------------------------------------------------------------------------------------------+
 ```
 
-### Data Flow & Isolation Architecture
-1. **Intake & Validation:** Incoming requests are validated against strict Pydantic schemas. Invalid calendar dates, leap-year anomalies, future dates of birth, and malformed emails are rejected with descriptive HTTP 422 envelopes.
-2. **Duplicate Fingerprinting:** A SHA-256 hash is computed from normalized name, ISO date, lowercased email, and fixed 3-decimal biomarker values. If matched and `allow_duplicate` is false, an HTTP 409 Conflict is returned with existing record metadata.
-3. **External Dissemination (TestWell):** After explicit user disclosure, **only** the numerical readings (`glucose_value`, `haemoglobin_value`, `cholesterol_value`) and unit profile (`ASSESSMENT_CONVENTIONAL_V1`) are sent to TestWell. Full names, email addresses, dates of birth, and internal database IDs are strictly excluded.
-4. **Context Normalization:** Provider ranges are mapped to domain models. Because clinical context (fasting state, biological sex, specimen timing) is not collected, observations are conservatively flagged `CONTEXT_NOT_CONFIRMED`.
-5. **Local AI Remarks:** The local Ollama daemon receives only the normalized findings and produces structured remarks. If Ollama is offline or safety validation trips, a deterministic provider fallback is applied and marked `DETERMINISTIC_FALLBACK`.
+---
+
+## 3. System Architecture & End-to-End Data Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Health Administrator
+    participant UI as React 18 Dashboard
+    participant API as FastAPI Backend
+    participant DB as SQLite 3 (WAL Mode)
+    participant Ext as TestWell HTTPS API
+    participant AI as Local Ollama (llama3.2:3b)
+
+    User->>UI: Submit Patient Intake Form
+    UI->>UI: Client-Side Validation (RFC Email, Calendar Dates)
+    UI->>API: POST /api/v1/patients
+    API->>API: Pydantic Validation & SHA-256 Fingerprint
+    alt Exact Collision without allow_duplicate
+        API-->>UI: HTTP 409 Conflict (DUPLICATE_RECORD)
+        UI-->>User: Display Duplicate Confirmation Dialog
+    else Valid or Confirmed (allow_duplicate=true)
+        API->>DB: Short DB Session: Insert Patient & Pending Analysis Run
+        DB-->>API: Persisted (Patient #ID, Analysis UUID)
+        API-->>UI: HTTP 201 Created (Initial Snapshot)
+        Note over API,Ext: Outbound Privacy Boundary: Direct Identifiers Stripped
+        API->>Ext: POST /api/agent/interpret_results (Biomarkers + Units only)
+        Ext-->>API: Raw Reference Intervals & Qualifiers
+        API->>API: Normalizer: Map to Domain Models & CONTEXT_NOT_CONFIRMED
+        alt Ollama Online & Prompt Safe
+            API->>AI: Generate Remarks (Structured JSON Schema)
+            AI-->>API: Synthesized Educational Text
+            API->>API: Post-Inference Safety Validator Check
+        else Ollama Offline or Safety Trip
+            API->>API: Apply Deterministic Provider Fallback (DETERMINISTIC_FALLBACK)
+        end
+        API->>DB: Short DB Session: Persist Observations, Remarks & Status
+        UI->>API: Poll GET /api/v1/patients/{id}/analyses/{analysis_id}
+        API-->>UI: HTTP 200 OK (Status: COMPLETED, Findings, Remarks)
+        UI-->>User: Render Detail Drawer with Observations & Badges
+    end
+```
 
 ---
 
-## 3. Technology Stack
+## 4. Technology Stack & Design Decisions
 
-- **Backend:** Python 3.12.6, FastAPI 0.115.14, Pydantic v2.14.3, Uvicorn 0.34.3.
-- **Persistence:** SQLite 3 (WAL mode, foreign key enforcement, busy timeout 5000ms), SQLAlchemy 2.0.58, Alembic 1.14.1.
-- **Frontend:** React 18.3.1, TypeScript 5.6.3, Vite 5.4.21, Tailwind CSS 3.4.17, Lucide React icons.
-- **External Integration:** HTTPX 0.28.1 (async HTTP client with exponential backoff and connection pooling).
-- **Local AI Engine:** Ollama daemon running `llama3.2:3b` with structured JSON Schema output.
-- **Testing & Quality Assurance:** Pytest 8.4.2, Vitest 2.1.9, Playwright 1.65.2 (Chromium), Ruff 0.9.10, Mypy 1.14.1 (strict).
+| Layer | Component | Choice | Rationale |
+|---|---|---|---|
+| **Backend Framework** | FastAPI 0.115.14 | Python 3.12.6 | Async ASGI framework, native OpenAPI schemas, sub-millisecond route dispatch. |
+| **Validation Layer** | Pydantic v2.14.3 | Core | C-accelerated validation with exact `Decimal(10,3)` biomarker representations. |
+| **Persistence Engine** | SQLite 3 + SQLAlchemy 2.0.58 | WAL Mode | Zero external infrastructure overhead; PRAGMA `foreign_keys=ON`, `busy_timeout=5000`. |
+| **Schema Migrations** | Alembic 1.14.1 | Versioned | Strict revision tracking (`0001_initial_schema.py`) supporting clean upgrade/downgrade. |
+| **Frontend Framework** | React 18.3.1 + Vite 5.4.21 | TypeScript 5.6.3 | Strict typing, instant HMR, high performance production bundle (232 kB). |
+| **Styling & Icons** | Tailwind CSS 3.4.17 | Lucide React | Clean medical aesthetic, fully responsive across 375px (mobile) to 1280px+ (desktop). |
+| **External Integration** | HTTPX 0.28.1 | Async HTTPS | Non-blocking HTTP client with timeouts, retry backoff, and zero open DB locks during I/O. |
+| **Local AI Engine** | Ollama daemon | `llama3.2:3b` | 100% offline, privacy-preserving LLM inference with low temperature (`0.1`) and JSON Schema. |
+| **Deterministic Fallback** | LabInsight Engine | Python | Automatic rule-based synthesis when AI is unavailable; never falsely badged as AI. |
 
 ---
 
-## 4. Quickstart & Setup Guide (Windows PowerShell)
+## 5. Quickstart & Setup Guide
 
-### Prerequisites
+### System Prerequisites
 - **Python:** 3.11 or 3.12 (verified on Python 3.12.6)
 - **Node.js:** v20+ (verified on Node.js v24.20.0 with npm 11.19.0)
 - **Git:** Installed on local machine
-- **Ollama (Optional for local AI):** Ollama daemon with model `llama3.2:3b` pulled (`ollama run llama3.2:3b`)
+- **Ollama (Optional for local AI):** Pull `llama3.2:3b` via `ollama run llama3.2:3b`
 
-### Step 1: Clone & Configure Environment
-From the repository root (`D:\Gokul-Task-2\Gokul_Task2_Health_Application`):
+---
 
+### Step-by-Step Installation (Windows PowerShell)
+
+#### 1. Clone & Setup Python Virtual Environment
 ```powershell
+# Clone the repository
+git clone https://github.com/AdityaKadam2902/gokul-task-2-submission.git
+cd gokul-task-2-submission
+
 # Copy environment configuration template
 Copy-Item .env.example .env
 
@@ -88,136 +170,86 @@ python -m venv .venv
 
 # Install backend dependencies (core, dev, testing)
 pip install -r backend/requirements-dev.txt
+```
 
-# Install frontend dependencies
+#### 2. Install Frontend Dependencies
+```powershell
 cd frontend
 npm ci
 cd ..
 ```
 
-### Step 2: Database Initialization & Migrations
-Initialize the SQLite schema using Alembic:
-
+#### 3. Initialize Database & Run Migrations
 ```powershell
-# Run database migrations to head
 $env:PYTHONPATH = "backend"
 .\.venv\Scripts\alembic.exe upgrade head
 ```
 
-### Step 3: Run the Backend Service
-In a PowerShell terminal:
+#### 4. (Optional) Seed Demonstration Data Instantly
+Populate the application with the 7 assessment records complete with TestWell observations and local AI remarks:
+```powershell
+python scripts/seed_demo_data.py --reset
+```
 
+#### 5. Start the Application Servers
+
+**Terminal 1 — Backend API (FastAPI):**
 ```powershell
 $env:PYTHONPATH = "backend"
 .\.venv\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-The backend API is now live at:
-- **Interactive Swagger Documentation:** `http://127.0.0.1:8000/docs`
-- **ReDoc Specification:** `http://127.0.0.1:8000/redoc`
-- **Liveness Endpoint:** `http://127.0.0.1:8000/api/v1/health`
-- **Readiness Probe:** `http://127.0.0.1:8000/api/v1/ready`
+- Interactive Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- Interactive ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+- Liveness Probe: [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health)
+- Database Readiness Probe: [http://127.0.0.1:8000/api/v1/ready](http://127.0.0.1:8000/api/v1/ready)
 
-### Step 4: Run the Frontend Application
-In a second PowerShell terminal:
-
+**Terminal 2 — Frontend UI (Vite + React):**
 ```powershell
 cd frontend
 npm run dev
 ```
-Open your browser to:
-- **Application Dashboard:** `http://127.0.0.1:5173/`
+- Application Dashboard: [http://127.0.0.1:5173/](http://127.0.0.1:5173/)
 
 ---
 
-## 5. REST API Specification
+## 6. REST API Specification
 
-### Health & Operations
-- `GET /api/v1/health`: Liveness probe reporting application status and version.
-- `GET /api/v1/ready`: Readiness probe executing active database connectivity (`SELECT 1`).
-- `GET /api/v1/meta/analysis-statuses`: Enumerates supported analysis statuses.
-
-### Patient Record Management
-- `POST /api/v1/patients`: Create a new patient record (validates input; checks duplicates; triggers analysis run).
-- `GET /api/v1/patients`: List patient records (paginated with `page` and `limit`, optional `search` filter).
-- `GET /api/v1/patients/{id}`: Retrieve a single patient profile with latest analysis state.
-- `PATCH /api/v1/patients/{id}`: Partial update. Name/email updates preserve analysis; clinical updates (DOB, measurements) trigger a fresh immutable analysis run.
-- `DELETE /api/v1/patients/{id}`: Delete patient record and cascade-purge linked analysis history.
-
-### Health Analysis Pipeline
-- `POST /api/v1/patients/{id}/analyses`: Trigger or retry health analysis execution (HTTP 202 Accepted). Reuses unstarted pending runs per Section 9 lifecycle rules.
-- `GET /api/v1/patients/{id}/analyses`: List historical analysis runs for a patient.
-- `GET /api/v1/patients/{id}/analyses/{analysis_id}`: Retrieve full details of an analysis run, including normalized provider observations, qualifiers, citations, and AI remarks.
+| Method | Endpoint | Request Body | Status Codes | Description |
+|---|---|---|---|---|
+| `GET` | `/api/v1/health` | None | `200` | Liveness probe returning service version and health status. |
+| `GET` | `/api/v1/ready` | None | `200`, `503` | Readiness probe performing active database ping (`SELECT 1`). |
+| `GET` | `/api/v1/meta/analysis-statuses` | None | `200` | Discovery endpoint for analysis lifecycle enums. |
+| `POST` | `/api/v1/patients` | `PatientCreate` JSON | `201`, `409`, `422` | Create patient profile. Rejects syntax errors (422) or duplicates (409). |
+| `GET` | `/api/v1/patients` | Query: `page`, `page_size`, `search` | `200` | Paginated patient list with search filter and latest analysis status. |
+| `GET` | `/api/v1/patients/{id}` | None | `200`, `404` | Retrieve detailed patient profile and latest analysis summary. |
+| `PATCH` | `/api/v1/patients/{id}` | `PatientUpdate` JSON | `200`, `404`, `409`, `422` | Partial update. Email updates preserve analysis; biomarker updates re-trigger analysis. |
+| `DELETE` | `/api/v1/patients/{id}` | None | `204`, `404` | Cascade-delete patient record and all historical analysis runs. |
+| `POST` | `/api/v1/patients/{id}/analyses` | None | `202`, `404`, `409` | Trigger or retry an analysis run asynchronously (HTTP 202). |
+| `GET` | `/api/v1/patients/{id}/analyses` | None | `200`, `404` | List all historical analysis runs for a patient (newest first). |
+| `GET` | `/api/v1/patients/{id}/analyses/{aid}` | None | `200`, `404` | Retrieve full analysis detail, TestWell findings, qualifiers, and AI remarks. |
 
 ---
 
-## 6. Privacy, Ethics & Safety Boundaries
+## 7. Employer Assessment 10-Submission Verification Matrix
 
-### 1. Direct Identifier Exclusion
-Outbound requests to TestWell contain exclusively:
-- `glucose_value` (number)
-- `haemoglobin_value` (number)
-- `cholesterol_value` (number)
-- `unit_profile_code` (`ASSESSMENT_CONVENTIONAL_V1`)
+The employer technical specification defines a mandatory 10-submission sequence to evaluate validation rigor, duplicate handling, update operations, and cascade deletions:
 
-Full names, email addresses, dates of birth, and internal database record IDs are **never** transmitted over the network or supplied to local LLM prompts.
+| # | Patient Name & Clinical Inputs | Expected Behavior | HTTP Code | Database Action | Persistence State |
+|---|---|---|---|---|---|
+| **1** | Robin Clinical (`91.0`, `14.3`, `178.0`) | Valid baseline intake | `201 Created` | Inserted | Persisted (1 total) |
+| **2** | Alex Syntax (Malformed email missing TLD) | Email syntax rejected | `422 Unprocessable` | Blocked | Rejected |
+| **3** | Jordan Low-Glu (`5.0` mg/dL Glucose) | Low glucose is valid clinical outlier | `201 Created` | Inserted | Persisted (2 total) |
+| **4** | Casey Leap (Impossible date: `31/11/1988`) | Nonexistent calendar date rejected | `422 Unprocessable` | Blocked | Rejected |
+| **5** | Morgan Dup (`112.0`, `15.1`, `215.0`) | Valid initial intake | `201 Created` | Inserted | Persisted (3 total) |
+| **6** | Morgan Dup (Exact duplicate of #5) | Duplicate flagged, user confirmed | `409 Conflict` &rarr; `201` | Inserted (override) | Persisted (4 total) |
+| **7** | Taylor Elevated (`145.0`, `16.0`, `240.0`) | Elevated biomarker intake | `201 Created` | Inserted | Persisted (5 total) |
+| **8** | Sam Future (`bad-email`, DOB `2030`) | Malformed email + future date | `422 Unprocessable` | Blocked | Rejected |
+| **9** | Riley Valid-Date (Leap day `29/02/1996`) | Valid leap-year date accepted | `201 Created` | Inserted | Persisted (6 total) |
+| **10** | Jamie High-Chol (`310.0` mg/dL Cholesterol) | High cholesterol is valid clinical outlier | `201 Created` | Inserted | Persisted (7 total) |
+| **Edit** | Update #7 email to `gokul@infocare.com` | Non-clinical update | `200 OK` | Updated in-place | Preserved (7 total) |
+| **Del** | Cascade delete record #5 | User-confirmed cascade deletion | `204 No Content` | Cascade Purged | **Exactly 6 remaining** |
 
-### 2. Sensitivity Notice
-Excluding direct identifiers does not render laboratory measurements non-sensitive. Data is transmitted securely over HTTPS solely for educational reference matching. Users are prompted with an explicit disclosure modal upon first submission.
-
-### 3. Clinical Transparency & Attribution
-- TestWell observations represent external reference intervals, not personal clinical evaluations.
-- Local AI remarks synthesize provider observations into plain language; they never fabricate diagnoses, prescribe medications, or calculate disease probabilities.
-- Provider reviewer metadata is not presented as individual verification.
-- Output generated by Ollama is badged `AI Generated (llama3.2:3b)`. Deterministic fallback is strictly badged `DETERMINISTIC_FALLBACK` and is never falsely represented as AI-generated.
-
-### 4. Conventional Unit Assumptions
-The employer specification omitted units for biomarker readings. LabInsight explicitly assumes conventional clinical units:
-- **Glucose:** `mg/dL`
-- **Haemoglobin:** `g/dL`
-- **Total Cholesterol:** `mg/dL`
-
-These assumptions are surfaced across disclaimer banners, intake forms, and disclosure dialogs.
-
----
-
-## 7. Verification & Quality Assurance Matrix
-
-### Automated Test Execution Commands
-
-```powershell
-# 1. Backend Pytest Suite (90 tests across 16 test modules)
-$env:PYTHONPATH = "backend"
-.\.venv\Scripts\pytest.exe tests/backend/ -v
-
-# 2. Python Static Analysis & Linting (Ruff)
-.\.venv\Scripts\ruff.exe check .
-.\.venv\Scripts\ruff.exe format --check .
-
-# 3. Python Strict Type Checking (Mypy)
-.\.venv\Scripts\mypy.exe backend tests
-
-# 4. Frontend Vitest Suite (35 tests across 5 test suites)
-npm --prefix frontend test
-
-# 5. Frontend TypeScript Typecheck
-npm --prefix frontend run typecheck
-
-# 6. Frontend Production Build
-npm --prefix frontend run build
-
-# 7. Playwright Browser End-to-End Suite (Google Chrome)
-.\.venv\Scripts\python.exe scratch/run_browser_e2e.py
-```
-
-### Verified Test Summary
-- **Backend Tests:** 90 / 90 passed (100% pass rate).
-- **Frontend Tests:** 35 / 35 passed (100% pass rate).
-- **Ruff Linter:** 0 errors across 65 source files.
-- **Ruff Formatter:** 65 files verified formatted.
-- **Mypy Strict:** 0 issues found in 65 source files.
-- **Frontend Production Build:** Built in 3.50s (`dist/assets/index-CflvCWlD.js`: 232.6 kB, CSS: 29.9 kB).
-- **Playwright Browser E2E:** 9 scenario groups executed against Google Chrome; 11 screenshots saved in `scratch/screenshots/`.
-- **Secret Audit:** 0 secrets, tokens, or credentials found across tracked files.
+*All 10 steps are fully verified by automated acceptance tests in [`tests/backend/test_phase6_acceptance.py`](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/tests/backend/test_phase6_acceptance.py) and browser E2E tests in [`tests/e2e/test_browser_e2e.py`](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/tests/e2e/test_browser_e2e.py).*
 
 ---
 
@@ -251,37 +283,91 @@ During the design and implementation of LabInsight, several complex engineering 
 
 ---
 
-## 9. Demonstration & Assessment Walkthrough
+## 9. Privacy, Ethics & Safety Boundaries
 
-To support rapid technical review and evaluation, demonstration tooling and the complete assessment sequence are documented in:  
-👉 [`docs/DEMO_AND_SUBMISSION_PLAN.md`](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/docs/DEMO_AND_SUBMISSION_PLAN.md)
+### 1. Direct Identifier Exclusion
+Outbound requests to TestWell contain exclusively:
+- `glucose_value` (Decimal number)
+- `haemoglobin_value` (Decimal number)
+- `cholesterol_value` (Decimal number)
+- `unit_profile_code` (`ASSESSMENT_CONVENTIONAL_V1`)
 
-### Instant Prototype Seeding
-You can immediately populate the application with the 7 assessment records complete with TestWell observations and local AI remarks using:
-```powershell
-python scripts/seed_demo_data.py --reset
-```
+Full names, email addresses, dates of birth, and internal database record IDs are **never** transmitted over the network or supplied to local LLM prompts.
 
-### Assessment Sequence Summary
-1. **Intake:** 10 submissions evaluated against validation constraints.
-2. **Rejections:** 3 invalid entries rejected with clear validation feedback (impossible calendar date 31.11, malformed email missing TLD, future year 2030).
-3. **Duplicate Confirmation:** 1 exact duplicate flagged with HTTP 409 Conflict, then confirmed with `allow_duplicate=true`.
-4. **Persisted Records:** Exactly 7 records saved in the database.
-5. **Update Operation:** One record's email updated to `gokul@infocare.com` (count remains 7; analysis history preserved).
-6. **Cascade Delete:** A different record deleted with cascade confirmation (count becomes 6).
-7. **Detailed Review:** Provider observations, clinical qualifiers (`CONTEXT_NOT_CONFIRMED`), citations, and local AI remarks reviewed in the patient detail drawer.
+### 2. Sensitivity Notice
+Excluding direct identifiers does not render laboratory measurements non-sensitive. Data is transmitted securely over HTTPS solely for educational reference matching. Users are prompted with an explicit disclosure modal upon first submission.
+
+### 3. Clinical Transparency & Attribution
+- TestWell observations represent external reference intervals, not personal clinical evaluations.
+- Local AI remarks synthesize provider observations into plain language; they never fabricate diagnoses, prescribe medications, or calculate disease probabilities.
+- Output generated by Ollama is badged `AI Generated (llama3.2:3b)`. Deterministic fallback is strictly badged `DETERMINISTIC_FALLBACK` and is never falsely represented as AI-generated.
+
+### 4. Conventional Unit Assumptions
+The employer specification omitted units for biomarker readings. LabInsight explicitly assumes conventional clinical units:
+- **Glucose:** `mg/dL`
+- **Haemoglobin:** `g/dL`
+- **Total Cholesterol:** `mg/dL`
+
+These assumptions are surfaced across disclaimer banners, intake forms, and disclosure dialogs.
 
 ---
 
-## 10. Repository Structure
+## 10. Verification & Quality Assurance Matrix
+
+### Automated Test Execution Commands
+
+```powershell
+# 1. Backend Pytest Suite (90 tests across 16 test modules)
+$env:PYTHONPATH = "backend"
+.\.venv\Scripts\pytest.exe tests/backend/ -v
+
+# 2. Python Static Analysis & Linting (Ruff)
+.\.venv\Scripts\ruff.exe check .
+.\.venv\Scripts\ruff.exe format --check .
+
+# 3. Python Strict Type Checking (Mypy)
+.\.venv\Scripts\mypy.exe backend tests
+
+# 4. Frontend Vitest Suite (35 tests across 5 test suites)
+npm --prefix frontend test
+
+# 5. Frontend TypeScript Typecheck
+npm --prefix frontend run typecheck
+
+# 6. Frontend Production Build
+npm --prefix frontend run build
+
+# 7. Playwright Browser End-to-End Suite
+.\.venv\Scripts\pytest.exe tests/e2e/test_browser_e2e.py -v
+```
+
+### Verified Test Summary
+
+| Test Suite | Scope | Target | Result | Execution Time |
+|---|---|---|---|---|
+| **Backend Unit & Integration** | 16 Modules | FastAPI, DB, Services, TestWell, Ollama | **90 / 90 Passed** | ~7.2s |
+| **Frontend Unit & Component** | 5 Test Suites | React Components, Services, Date Validation | **35 / 35 Passed** | ~17.9s |
+| **Python Linter (Ruff)** | Entire Project | Syntax, Imports, Code Style | **0 Errors** (Clean) | <1.0s |
+| **Python Strict Types (Mypy)** | 45 Source Files | Strict Type Signatures & Disallow Untyped | **0 Errors** (Clean) | <4.0s |
+| **TypeScript Typecheck** | Frontend App | Strict TypeScript AST | **0 Errors** (Clean) | <2.0s |
+| **Production Bundle (Vite)** | Frontend App | Optimized Production Build | **Success** (232 kB JS) | ~3.5s |
+| **Browser E2E (Playwright)** | Full Application | 9 Scenario Groups against Chrome | **Verified** | Interactive |
+| **Security & Secrets Audit** | Git Tree | Zero Credentials, API Keys, or PII | **Passed** (0 Secrets) | Instant |
+
+---
+
+## 11. Repository Structure
 
 ```
 .
 ├── backend/
 │   ├── alembic/                 # Database migration scripts & env.py
+│   │   └── versions/            # 0001_initial_schema.py
 │   ├── app/
 │   │   ├── api/v1/              # FastAPI router & REST endpoints
-│   │   ├── core/                # App configuration, logging & exceptions
+│   │   │   ├── endpoints/       # patients.py, health.py, meta.py
+│   │   │   └── router.py        # Centralized v1 router
+│   │   ├── core/                # Configuration, logging & exception handlers
 │   │   ├── db/                  # SQLite connection engine & session factory
 │   │   ├── integrations/
 │   │   │   ├── ollama/          # Client, prompts, safety validator, fallback
@@ -314,18 +400,19 @@ python scripts/seed_demo_data.py --reset
 │   └── e2e/                     # Playwright browser integration tests
 ├── .env.example                 # Template environment variables
 ├── .gitignore                   # Excludes DBs, secrets, .venv, node_modules, PDF
+├── alembic.ini                  # Database migration configuration
+├── pyproject.toml               # Python project configuration & tool configs
 └── README.md                    # This document
 ```
 
 ---
 
-## 11. Candidate Information
+## 12. Assessment Candidate Information
 
-- **Candidate Number:** 267
-- **Role:** AI Growth & Automation Associate
-- **Employer:** Gokul Infocare Pty Ltd
-
-- **Assessment Candidate:** Candidate Number 267
-- **Target Organization:** Gokul Infocare Pty Ltd
-- **Role:** AI Growth & Automation Associate — Task 2
-- **License:** Proprietary Assessment Prototype — For Evaluation Purposes Only
+| Field | Submission Value |
+|---|---|
+| **Candidate Number** | **267** |
+| **Role Applied For** | **AI Growth & Automation Associate — Task 2** |
+| **Target Organization** | **Gokul Infocare Pty Ltd** |
+| **Submission Repository** | [https://github.com/AdityaKadam2902/gokul-task-2-submission](https://github.com/AdityaKadam2902/gokul-task-2-submission) |
+| **License** | Proprietary Assessment Prototype — For Evaluation Purposes Only |

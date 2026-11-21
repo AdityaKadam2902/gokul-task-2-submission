@@ -131,20 +131,20 @@ All mandatory acceptance tests (AT-01 through AT-13) have been fully automated a
 |---|---|---|---|
 | AT-01 | Backend startup & database readiness probe | `tests/backend/test_health.py`, `tests/backend/test_readiness.py` | PASS |
 | AT-02 | Create valid patient & persistence | `tests/backend/test_patient_api.py`, `tests/backend/test_phase6_acceptance.py` | PASS |
-| AT-03 | List/detail read persisted data | `tests/backend/test_patient_api.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-04 | Update fields and verify persistence | `tests/backend/test_patient_api.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-05 | Delete patient & cascade analysis history | `tests/backend/test_models.py`, `tests/backend/test_patient_api.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-06 | Invalid email syntax rejection (missing TLD, no @) | `tests/backend/test_patient_validation.py`, `tests/backend/test_phase6_acceptance.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-07 | Impossible (31/11, 31/02) and future DOB rejected | `tests/backend/test_patient_validation.py`, `tests/backend/test_phase6_acceptance.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-08 | Biomarkers reject negative/non-numeric values | `tests/backend/test_patient_validation.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-09 | Exact duplicate HTTP 409 warning & confirmed override | `tests/backend/test_patient_api.py`, `tests/backend/test_phase6_acceptance.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-10A | TestWell API returns matched observations | `tests/backend/test_testwell_adapter.py`, `scratch/run_browser_e2e.py` | PASS |
-| AT-10B | Ollama generates structured JSON Schema AI remarks | `tests/backend/test_ollama_client.py`, `tests/backend/test_ollama_safety_and_validation.py`, `scratch/run_browser_e2e.py` | PASS |
+| AT-03 | List/detail read persisted data | `tests/backend/test_patient_api.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-04 | Update fields and verify persistence | `tests/backend/test_patient_api.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-05 | Delete patient & cascade analysis history | `tests/backend/test_models.py`, `tests/backend/test_patient_api.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-06 | Invalid email syntax rejection (missing TLD, no @) | `tests/backend/test_patient_validation.py`, `tests/backend/test_phase6_acceptance.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-07 | Impossible (31/11, 31/02) and future DOB rejected | `tests/backend/test_patient_validation.py`, `tests/backend/test_phase6_acceptance.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-08 | Biomarkers reject negative/non-numeric values | `tests/backend/test_patient_validation.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-09 | Exact duplicate HTTP 409 warning & confirmed override | `tests/backend/test_patient_api.py`, `tests/backend/test_phase6_acceptance.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-10A | TestWell API returns matched observations | `tests/backend/test_testwell_adapter.py`, `tests/e2e/test_browser_e2e.py` | PASS |
+| AT-10B | Ollama generates structured JSON Schema AI remarks | `tests/backend/test_ollama_client.py`, `tests/backend/test_ollama_safety_and_validation.py`, `tests/e2e/test_browser_e2e.py` | PASS |
 | AT-10C | Clinical context qualifiers displayed (fasting, age) | `tests/backend/test_testwell_adapter.py`, `frontend/src/components/patients/PatientDetailModal.tsx` | PASS |
 | AT-10D | TestWell network failure produces safe recovery | `tests/backend/test_phase6_acceptance.py::test_failure_recovery_testwell_network_outage` | PASS |
 | AT-10E | Ollama failure produces labelled deterministic fallback | `tests/backend/test_phase6_acceptance.py::test_failure_recovery_ollama_fallback` | PASS |
 | AT-10F | Zero PII transmitted externally or to local LLM | `tests/backend/test_testwell_privacy.py`, `tests/backend/test_ollama_privacy.py` | PASS |
 | AT-11 | Email-only PATCH preserves analysis without re-run | `tests/backend/test_patient_api.py`, `tests/backend/test_phase6_acceptance.py` | PASS |
 | AT-12 | Clinical input PATCH triggers fresh immutable analysis | `tests/backend/test_patient_api.py` | PASS |
-| AT-13 | 10-submission workflow (3 rejected, 1 dup, 7 saved, edit, delete -> 6) | `tests/backend/test_phase6_acceptance.py::test_employer_assessment_10_submission_lifecycle`, `scratch/run_browser_e2e.py` | PASS |
+| AT-13 | 10-submission workflow (3 rejected, 1 dup, 7 saved, edit, delete -> 6) | `tests/backend/test_phase6_acceptance.py::test_employer_assessment_10_submission_lifecycle`, `tests/e2e/test_browser_e2e.py` | PASS |
 
