@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
 
     # CORS Settings
-    cors_origins: list[str] = Field(default=["http://localhost:5173", "http://127.0.0.1:5173"])
+    cors_origins: list[str] | str = Field(
+        default=["http://localhost:5173", "http://127.0.0.1:5173"]
+    )
 
     # Database Settings (Phase 2 Baseline - SQLite)
     database_url: str = "sqlite:///./backend/data/labinsight.db"
@@ -55,8 +57,18 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:
         if isinstance(value, str):
+            cleaned = value.strip()
+            if cleaned.startswith("[") and cleaned.endswith("]"):
+                import json
+
+                try:
+                    parsed = json.loads(cleaned)
+                    if isinstance(parsed, list):
+                        return [str(origin).strip() for origin in parsed if str(origin).strip()]
+                except Exception:
+                    pass
             # Parse comma-separated string if provided via environment variable
-            return [origin.strip() for origin in value.split(",") if origin.strip()]
+            return [origin.strip() for origin in cleaned.split(",") if origin.strip()]
         if isinstance(value, list):
             return [str(origin).strip() for origin in value if str(origin).strip()]
         return ["http://localhost:5173", "http://127.0.0.1:5173"]
