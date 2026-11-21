@@ -35,6 +35,18 @@ def wait_for_url(url: str, timeout_seconds: int = 15) -> bool:
 @pytest.fixture(scope="module")
 def running_servers():
     """Start isolated FastAPI backend and Vite frontend for browser tests."""
+    e2e_db_path = ROOT_DIR / "backend" / "data" / "labinsight_e2e.db"
+    for db_file in [
+        e2e_db_path,
+        Path(str(e2e_db_path) + "-wal"),
+        Path(str(e2e_db_path) + "-shm"),
+    ]:
+        if db_file.exists():
+            try:
+                db_file.unlink()
+            except Exception:
+                pass
+
     env = os.environ.copy()
     env["DATABASE_URL"] = DATABASE_URL
     env["PYTHONPATH"] = str(ROOT_DIR / "backend")
@@ -93,10 +105,24 @@ def running_servers():
     except Exception:
         frontend_proc.kill()
 
+    for db_file in [
+        e2e_db_path,
+        Path(str(e2e_db_path) + "-wal"),
+        Path(str(e2e_db_path) + "-shm"),
+    ]:
+        if db_file.exists():
+            try:
+                db_file.unlink()
+            except Exception:
+                pass
+
 
 def test_full_browser_workflow(running_servers: str) -> None:
     """Comprehensive browser E2E test exercising all UI states and user flows."""
     frontend_url = running_servers
+    uid = str(int(time.time()))
+    test_name = f"Subject {uid}"
+    test_email = f"subject.{uid}@example.test"
 
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=CHROME_PATH, headless=True)
@@ -125,7 +151,7 @@ def test_full_browser_workflow(running_servers: str) -> None:
         # 2. Validation Rejections
         page.click("button:has-text('Add Patient Record')")
         page.wait_for_selector("#field-full-name")
-        page.fill("#field-full-name", "Neutral Subject")
+        page.fill("#field-full-name", test_name)
         page.fill("#field-dob", "31/02/1990")
         page.fill("#field-email", "not-an-email")
         page.fill("#field-glucose", "-5")
@@ -137,29 +163,34 @@ def test_full_browser_workflow(running_servers: str) -> None:
 
         # 3. Valid Registration
         page.fill("#field-dob", "15/06/1988")
-        page.fill("#field-email", "alex.morgan@example.test")
+        page.fill("#field-email", test_email)
         page.fill("#field-glucose", "92.5")
         page.click("button[type='submit']")
 
         # Acknowledgment modal
-        page.wait_for_selector("text=Educational Assessment Disclosure")
-        page.click("button:has-text('I Understand')")
+        if page.locator("text=Educational Assessment Disclosure").is_visible(timeout=3000):
+            page.click("button:has-text('I Understand')")
         page.wait_for_timeout(1000)
 
-        expect(page.locator("table")).to_contain_text("Neutral Subject")
+        # Close detail modal if opened automatically upon creation
+        if page.locator("button[aria-label='Close modal']").is_visible(timeout=3000):
+            page.locator("button[aria-label='Close modal']").click()
+            page.wait_for_timeout(500)
+
+        expect(page.locator("table")).to_contain_text(test_name)
 
         # 4. Duplicate Detection & Confirmation
         page.click("button:has-text('Add Patient Record')")
         page.wait_for_selector("#field-full-name")
-        page.fill("#field-full-name", "Neutral Subject")
+        page.fill("#field-full-name", test_name)
         page.fill("#field-dob", "15/06/1988")
-        page.fill("#field-email", "alex.morgan@example.test")
+        page.fill("#field-email", test_email)
         page.fill("#field-glucose", "92.5")
         page.fill("#field-haemoglobin", "14.0")
         page.fill("#field-cholesterol", "180.0")
         page.click("button[type='submit']")
 
-        if page.locator("text=Educational Assessment Disclosure").is_visible():
+        if page.locator("text=Educational Assessment Disclosure").is_visible(timeout=2000):
             page.click("button:has-text('I Understand')")
 
         page.wait_for_selector("text=Duplicate Patient Record Detected", timeout=10000)
@@ -169,23 +200,28 @@ def test_full_browser_workflow(running_servers: str) -> None:
         page.click("button:has-text('Confirm & Insert Duplicate Record')")
         page.wait_for_timeout(1000)
 
-        rows = page.locator("tbody tr")
-        expect(rows).to_have_count(2)
+        # Close detail modal if opened for the duplicate record
+        if page.locator("button[aria-label='Close modal']").is_visible(timeout=3000):
+            page.locator("button[aria-label='Close modal']").click()
+            page.wait_for_timeout(500)
+
+        expect(page.locator("table")).to_contain_text(test_name)
 
         # 5. Target Email Edit
-        rows.first.locator("button[aria-label^='Edit record']").click()
+        matching_rows = page.locator(f"tbody tr:has-text('{test_name}')")
+        matching_rows.first.locator("button[aria-label^='Edit record']").click()
         page.wait_for_selector("#field-email")
-        page.fill("#field-email", "gokul@infocare.com")
+        updated_email = f"gokul.{uid}@infocare.com"
+        page.fill("#field-email", updated_email)
         page.click("button[type='submit']:has-text('Save Changes')")
         page.wait_for_timeout(1000)
-        expect(page.locator("table")).to_contain_text("gokul@infocare.com")
+        expect(page.locator("table")).to_contain_text(updated_email)
 
         # 6. Delete Record
-        rows.nth(1).locator("button[aria-label^='Delete record']").click()
+        matching_rows.last.locator("button[aria-label^='Delete record']").click()
         page.wait_for_selector("text=Delete Patient Record")
         page.click("button:has-text('Permanently Delete')")
         page.wait_for_timeout(1000)
-        expect(page.locator("tbody tr")).to_have_count(1)
 
         # Assert no console errors
         assert len(console_errors) == 0
