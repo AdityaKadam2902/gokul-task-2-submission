@@ -6,8 +6,8 @@
 [![React 18](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript 5](https://img.shields.io/badge/TypeScript-5.6.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![SQLite WAL](https://img.shields.io/badge/Database-SQLite%20(WAL%20Mode)-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Backend Tests](https://img.shields.io/badge/Pytest-90%2F90%20Passed-brightgreen?logo=pytest&logoColor=white)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/tests/backend/)
-[![Frontend Tests](https://img.shields.io/badge/Vitest-35%2F35%20Passed-brightgreen?logo=vitest&logoColor=white)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/frontend/)
+[![Backend Tests](https://img.shields.io/badge/Pytest-113%2F113%20Passed-brightgreen?logo=pytest&logoColor=white)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/tests/backend/)
+[![Frontend Tests](https://img.shields.io/badge/Vitest-45%2F45%20Passed-brightgreen?logo=vitest&logoColor=white)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/frontend/)
 [![Linter](https://img.shields.io/badge/Ruff-Clean%20(0%20Errors)-brightgreen?logo=ruff&logoColor=white)](https://docs.astral.sh/ruff/)
 [![Type Checker](https://img.shields.io/badge/Mypy-Strict%20Clean-brightgreen?logo=python&logoColor=white)](https://mypy-lang.org/)
 [![Release Status](https://img.shields.io/badge/Status-Submission%20Ready-success)](file:///d:/Gokul-Task-2/Gokul_Task2_Health_Application/README.md)
@@ -42,6 +42,7 @@ The application empowers healthcare administrators and technical reviewers to:
 4. **Integrate External Health Interpretation (TestWell):** Securely transmit de-identified numerical biomarker values and unit profiles over HTTPS to the external TestWell reference catalog to retrieve qualitative flags, provider reference intervals, and clinical citations.
 5. **Synthesize Local AI Remarks (Ollama `llama3.2:3b`):** Generate plain-language educational summaries using a locally hosted LLM with structured JSON Schema output, strict clinical guardrails, and deterministic provider fallback.
 6. **Support the Employer Assessment Sequence:** Flawlessly execute the 10 employer assessment submissions (3 rejected, 1 confirmed duplicate, 7 persisted), update an email to `gokul@infocare.com`, and delete a separate record with cascade confirmation to leave exactly 6 records.
+7. **Gokul + Gmail Cross-Field Business Validation:** Automatically reject any patient record where the trimmed full name is exactly `'Gokul'` (case-insensitive) and the email contains `'gmail'` (case-insensitive), enforced on both patient creation and partial `PATCH` updates across merged attributes.
 
 > [!IMPORTANT]
 > **Educational Prototype Notice:** LabInsight is an educational assessment prototype, not certified Medical Device Software (SaMD) or a clinical diagnostic system. Results do not constitute a medical diagnosis, clinical evaluation, or treatment plan.
@@ -281,6 +282,10 @@ During the design and implementation of LabInsight, several complex engineering 
 - **Challenge:** Overcoming Pydantic Settings 2.x premature JSON decoding errors on Windows when parsing CORS origin lists from `.env` files.
 - **Solution:** Engineered flexible union typing and robust string parsing supporting both standard comma-separated lists and JSON arrays.
 
+### 7. Cross-Field Business Validation & Partial Merged-Update Enforcement
+- **Challenge:** Enforcing cross-attribute business rules (rejecting exact name 'Gokul' paired with any email containing 'gmail') across both client form inputs and partial HTTP PATCH updates, where a client might update only one field while the other remains in the database.
+- **Solution:** Engineered `validate_gokul_gmail_combination()` in `backend/app/services/patient_service.py` and hooked it into both `create_patient()` and `update_patient()`. On PATCH requests, the validator evaluates the final merged state of incoming and existing fields, raising `PatientValidationException` (HTTP 422) before database commit or analysis run creation. Paired with synchronized client-side validation in `validatePatientForm()` and responsive error clearing in `PatientFormModal.tsx`.
+
 ---
 
 ## 9. Privacy, Ethics & Safety Boundaries
@@ -345,14 +350,19 @@ npm --prefix frontend run build
 
 | Test Suite | Scope | Target | Result | Execution Time |
 |---|---|---|---|---|
-| **Backend Unit & Integration** | 16 Modules | FastAPI, DB, Services, TestWell, Ollama | **90 / 90 Passed** | ~7.2s |
-| **Frontend Unit & Component** | 5 Test Suites | React Components, Services, Date Validation | **35 / 35 Passed** | ~17.9s |
+| **Backend Unit & Integration** | 16 Modules | FastAPI, DB, Services, TestWell, Ollama, Gokul Validation | **113 / 113 Passed** | ~52.0s |
+| **Frontend Unit & Component** | 5 Test Suites | React Components, Services, Date & Gokul Validation | **45 / 45 Passed** | ~12.4s |
 | **Python Linter (Ruff)** | Entire Project | Syntax, Imports, Code Style | **0 Errors** (Clean) | <1.0s |
-| **Python Strict Types (Mypy)** | 45 Source Files | Strict Type Signatures & Disallow Untyped | **0 Errors** (Clean) | <4.0s |
+| **Python Strict Types (Mypy)** | 65 Source Files | Strict Type Signatures & Disallow Untyped | **0 Errors** (Clean) | <4.0s |
 | **TypeScript Typecheck** | Frontend App | Strict TypeScript AST | **0 Errors** (Clean) | <2.0s |
-| **Production Bundle (Vite)** | Frontend App | Optimized Production Build | **Success** (232 kB JS) | ~3.5s |
+| **Production Bundle (Vite)** | Frontend App | Optimized Production Build | **Success** (233 kB JS) | ~4.8s |
 | **Browser E2E (Playwright)** | Full Application | 9 Scenario Groups against Chrome | **Verified** | Interactive |
 | **Security & Secrets Audit** | Git Tree | Zero Credentials, API Keys, or PII | **Passed** (0 Secrets) | Instant |
+
+### Visual Evidence & Reviewer Proof
+- **Frontend Validation Modal:** [`screenshots/01_frontend_gokul_gmail_validation.png`](screenshots/01_frontend_gokul_gmail_validation.png) (Visible error and prevented submission)
+- **Backend API Direct Validation:** [`screenshots/02_backend_422_validation_error.png`](screenshots/02_backend_422_validation_error.png) (HTTP 422 `VALIDATION_ERROR` envelope)
+- **Automated Tests Suite:** [`screenshots/03_automated_tests_passing.png`](screenshots/03_automated_tests_passing.png) (113 backend tests & 45 frontend tests passing)
 
 ---
 

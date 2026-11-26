@@ -9,6 +9,7 @@ import {
   validateEmail,
   validateBiomarker,
   validatePatientForm,
+  validateGokulGmailCombination,
 } from '../src/utils/validation';
 
 describe('Date Utilities', () => {
@@ -141,6 +142,91 @@ describe('Validation Utilities', () => {
       expect(result.errors.glucose_value).toBeDefined();
       expect(result.errors.haemoglobin_value).toBeDefined();
       expect(result.errors.cholesterol_value).toBeUndefined();
+    });
+
+    it('rejects Gokul + Gmail combination and attaches error to email field', () => {
+      const result = validatePatientForm({
+        full_name: 'Gokul',
+        date_of_birth: '1990-05-15',
+        email: 'test.user@gmail.com',
+        glucose_value: '95.0',
+        haemoglobin_value: '14.5',
+        cholesterol_value: '185.0',
+      });
+      expect(result.isValid).toBe(false);
+      expect(result.errors.email).toBe(
+        "The name 'Gokul' cannot be used with an email address containing 'gmail'."
+      );
+      expect(result.errors.full_name).toBeUndefined();
+    });
+
+    it('accepts Gokul with non-Gmail address in validatePatientForm', () => {
+      const result = validatePatientForm({
+        full_name: 'Gokul',
+        date_of_birth: '1990-05-15',
+        email: 'user@yahoo.com',
+        glucose_value: '95.0',
+        haemoglobin_value: '14.5',
+        cholesterol_value: '185.0',
+      });
+      expect(result.isValid).toBe(true);
+      expect(result.errors.email).toBeUndefined();
+    });
+
+    it('accepts Gokul Kadam with Gmail address in validatePatientForm', () => {
+      const result = validatePatientForm({
+        full_name: 'Gokul Kadam',
+        date_of_birth: '1990-05-15',
+        email: 'user@gmail.com',
+        glucose_value: '95.0',
+        haemoglobin_value: '14.5',
+        cholesterol_value: '185.0',
+      });
+      expect(result.isValid).toBe(true);
+      expect(result.errors.email).toBeUndefined();
+    });
+  });
+
+  describe('validateGokulGmailCombination', () => {
+    it('rejects exact match Gokul + gmail.com address', () => {
+      const error = validateGokulGmailCombination('Gokul', 'user@gmail.com');
+      expect(error).toBe("The name 'Gokul' cannot be used with an email address containing 'gmail'.");
+    });
+
+    it('rejects uppercase GOKUL + uppercase Gmail address', () => {
+      const error = validateGokulGmailCombination('GOKUL', 'USER@GMAIL.COM');
+      expect(error).toBe("The name 'Gokul' cannot be used with an email address containing 'gmail'.");
+    });
+
+    it('rejects mixed-case variations', () => {
+      expect(validateGokulGmailCombination('gokul', 'user@Gmail.com')).toBe(
+        "The name 'Gokul' cannot be used with an email address containing 'gmail'."
+      );
+      expect(validateGokulGmailCombination('GoKuL', 'user@gMaIl.com')).toBe(
+        "The name 'Gokul' cannot be used with an email address containing 'gmail'."
+      );
+    });
+
+    it('handles leading and trailing whitespace properly', () => {
+      const error = validateGokulGmailCombination('   Gokul   ', '  user@gmail.com  ');
+      expect(error).toBe("The name 'Gokul' cannot be used with an email address containing 'gmail'.");
+    });
+
+    it('accepts Gokul with a non-Gmail address', () => {
+      expect(validateGokulGmailCombination('Gokul', 'user@yahoo.com')).toBeNull();
+      expect(validateGokulGmailCombination('Gokul', 'gokul@infocare.com')).toBeNull();
+      expect(validateGokulGmailCombination('Gokul', 'user@outlook.com')).toBeNull();
+    });
+
+    it('accepts another name with a Gmail address', () => {
+      expect(validateGokulGmailCombination('Rahul', 'user@gmail.com')).toBeNull();
+      expect(validateGokulGmailCombination('Aditya', 'user@gmail.com')).toBeNull();
+    });
+
+    it('accepts names containing Gokul as substring (e.g., Gokul Kadam)', () => {
+      expect(validateGokulGmailCombination('Gokul Kadam', 'user@gmail.com')).toBeNull();
+      expect(validateGokulGmailCombination('Kadam Gokul', 'user@gmail.com')).toBeNull();
+      expect(validateGokulGmailCombination('Gokulraj', 'user@gmail.com')).toBeNull();
     });
   });
 });

@@ -9,7 +9,12 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
+from app.core.exceptions import PatientValidationException
 from app.schemas.patient import PatientCreate, PatientUpdate
+from app.services.patient_service import (
+    check_gokul_gmail_combination,
+    validate_gokul_gmail_combination,
+)
 from pydantic import ValidationError
 
 
@@ -190,3 +195,47 @@ def test_patient_update_schema_partial_fields() -> None:
     # Invalid DOB in update rejected
     with pytest.raises(ValidationError):
         PatientUpdate.model_validate({"date_of_birth": "32/01/1990"})
+
+
+@pytest.mark.parametrize(
+    ("full_name", "email"),
+    [
+        ("Gokul", "user@gmail.com"),
+        ("GOKUL", "user@gmail.com"),
+        ("gokul", "USER@GMAIL.COM"),
+        ("Gokul", "user@Gmail.com"),
+        ("  Gokul  ", "  user@gmail.com  "),
+        ("gokul", "gokul.developer@gmail.co.in"),
+        ("GOKUL", "sample.gmail@customdomain.test"),
+    ],
+)
+def test_gokul_gmail_combination_rejected(full_name: str, email: str) -> None:
+    """Reject combinations where trimmed full name is 'Gokul' and email contains 'gmail'."""
+    assert check_gokul_gmail_combination(full_name, email) is True
+    with pytest.raises(PatientValidationException) as exc:
+        validate_gokul_gmail_combination(full_name, email)
+    assert exc.value.status_code == 422
+    assert exc.value.code == "VALIDATION_ERROR"
+    assert (
+        "The name 'Gokul' cannot be used with an email address containing 'gmail'."
+        in exc.value.message
+    )
+
+
+@pytest.mark.parametrize(
+    ("full_name", "email"),
+    [
+        ("Gokul", "user@yahoo.com"),
+        ("Gokul", "gokul@infocare.com"),
+        ("Rahul", "user@gmail.com"),
+        ("Gokul Kadam", "user@gmail.com"),
+        ("Kadam Gokul", "user@gmail.com"),
+        ("Gokulraj", "user@gmail.com"),
+        ("Alice", "alice@example.test"),
+    ],
+)
+def test_gokul_gmail_combination_accepted(full_name: str, email: str) -> None:
+    """Accept valid combinations where only one or neither condition is met."""
+    assert check_gokul_gmail_combination(full_name, email) is False
+    # Does not raise
+    validate_gokul_gmail_combination(full_name, email)

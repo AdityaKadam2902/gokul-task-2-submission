@@ -71,3 +71,27 @@ class DuplicateRecordException(AppException):
             ],
         )
         self.existing_patient_id = existing_patient_id
+
+
+class PatientValidationException(AppException):
+    """Raised when patient business or combination validation fails (HTTP 422)."""
+
+    def __init__(
+        self,
+        message: str = "The name 'Gokul' cannot be used with an email address containing 'gmail'.",
+        field: str = "email",
+        code: str = "VALIDATION_ERROR",
+    ):
+        super().__init__(
+            message=message,
+            code="VALIDATION_ERROR",
+            status_code=422,
+            details=[
+                {
+                    "field": field,
+                    "code": code,
+                    "message": message,
+                }
+            ],
+        )
+        self.field = field

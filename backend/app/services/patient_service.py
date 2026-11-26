@@ -12,7 +12,11 @@ from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import DuplicateRecordException, ResourceNotFoundException
+from app.core.exceptions import (
+    DuplicateRecordException,
+    PatientValidationException,
+    ResourceNotFoundException,
+)
 from app.models.enums import AiStatus, ExternalStatus, OverallStatus
 from app.models.patient import Patient
 from app.models.patient_analysis import PatientAnalysis
@@ -45,6 +49,28 @@ def get_latest_analysis(patient: Patient) -> PatientAnalysis | None:
     return max(patient.analyses, key=lambda a: a.run_number)
 
 
+def check_gokul_gmail_combination(full_name: str | None, email: str | None) -> bool:
+    """Check if full name is exactly 'Gokul' (case-insensitive, trimmed) and email contains 'gmail' (case-insensitive)."""
+    if full_name is None or email is None:
+        return False
+    trimmed_name = full_name.strip()
+    return trimmed_name.lower() == "gokul" and "gmail" in email.lower()
+
+
+def validate_gokul_gmail_combination(full_name: str | None, email: str | None) -> None:
+    """Validate that trimmed full name is not exactly 'Gokul' when email contains 'gmail'.
+
+    Raises:
+        PatientValidationException (HTTP 422): If both conditions are met.
+    """
+    if check_gokul_gmail_combination(full_name, email):
+        raise PatientValidationException(
+            message="The name 'Gokul' cannot be used with an email address containing 'gmail'.",
+            field="email",
+            code="VALIDATION_ERROR",
+        )
+
+
 class PatientService:
     """Service orchestrating patient record persistence and analysis run lifecycle."""
 
@@ -52,9 +78,14 @@ class PatientService:
     def create_patient(db: Session, data: PatientCreate) -> tuple[Patient, PatientAnalysis]:
         """Validate, check duplicates, persist patient record, and initialize analysis run.
 
-        Raises DuplicateRecordException (HTTP 409) if duplicate is detected and allow_duplicate=False.
+        Raises:
+            PatientValidationException (HTTP 422) if business combination rules fail.
+            DuplicateRecordException (HTTP 409) if duplicate is detected and allow_duplicate=False.
         """
-        # 1. Duplicate check
+        # 1. Business combination validation (Gokul + Gmail restriction)
+        validate_gokul_gmail_combination(full_name=data.full_name, email=data.email)
+
+        # 2. Duplicate check
         existing_duplicate = find_duplicate_patient(
             db=db,
             full_name=data.full_name,
@@ -188,6 +219,9 @@ class PatientService:
             if data.unit_profile_code is not None
             else patient.unit_profile_code
         )
+
+        # Validate business combination on merged values before duplicate check or DB mutations
+        validate_gokul_gmail_combination(full_name=eff_name, email=eff_email)
 
         # Duplicate check against other patients
         existing_duplicate = find_duplicate_patient(

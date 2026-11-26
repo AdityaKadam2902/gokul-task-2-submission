@@ -46,6 +46,15 @@ export function validateEmail(email: string): string | null {
   return null;
 }
 
+export function validateGokulGmailCombination(fullName: string, email: string): string | null {
+  const trimmedName = fullName.trim();
+  const trimmedEmail = email.trim();
+  if (trimmedName.toLowerCase() === 'gokul' && trimmedEmail.toLowerCase().includes('gmail')) {
+    return "The name 'Gokul' cannot be used with an email address containing 'gmail'.";
+  }
+  return null;
+}
+
 export function validateBiomarker(val: string, label: string): string | null {
   const trimmed = val.trim();
   if (!trimmed) {
@@ -73,7 +82,14 @@ export function validatePatientForm(data: PatientFormData): { isValid: boolean; 
   }
 
   const emailError = validateEmail(data.email);
-  if (emailError) errors.email = emailError;
+  if (emailError) {
+    errors.email = emailError;
+  } else {
+    const comboError = validateGokulGmailCombination(data.full_name, data.email);
+    if (comboError) {
+      errors.email = comboError;
+    }
+  }
 
   const glucoseError = validateBiomarker(data.glucose_value, 'Glucose');
   if (glucoseError) errors.glucose_value = glucoseError;

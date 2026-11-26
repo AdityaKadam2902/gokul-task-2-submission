@@ -7,6 +7,7 @@ Engineering Baseline: Blueprint v0.2
 
 from decimal import Decimal
 
+import pytest
 from app.models.patient import Patient
 from app.models.patient_analysis import PatientAnalysis
 from fastapi.testclient import TestClient
@@ -360,3 +361,179 @@ def test_get_analysis_statuses_metadata(api_client: TestClient) -> None:
     assert "PENDING" in data["overall_status"]
     assert "COMPLETED" in data["overall_status"]
     assert "DEGRADED" in data["overall_status"]
+
+
+@pytest.mark.parametrize(
+    ("full_name", "email"),
+    [
+        ("Gokul", "user@gmail.com"),
+        ("GOKUL", "user@gmail.com"),
+        ("gokul", "USER@GMAIL.COM"),
+        ("Gokul", "user@Gmail.com"),
+        ("  Gokul  ", "  user@gmail.com  "),
+    ],
+)
+def test_create_patient_gokul_gmail_rejected(
+    api_client: TestClient,
+    test_db_session: Session,
+    full_name: str,
+    email: str,
+) -> None:
+    """Reject patient creation when full name is 'Gokul' and email contains 'gmail'."""
+    initial_count = len(test_db_session.scalars(select(Patient)).all())
+    initial_analyses = len(test_db_session.scalars(select(PatientAnalysis)).all())
+
+    payload = {
+        "full_name": full_name,
+        "date_of_birth": "15/06/1990",
+        "email": email,
+        "glucose_value": 90.0,
+        "haemoglobin_value": 14.0,
+        "cholesterol_value": 180.0,
+    }
+    response = api_client.post("/api/v1/patients", json=payload)
+    assert response.status_code == 422
+
+    body = response.json()
+    assert "error" in body
+    err = body["error"]
+    assert err["code"] == "VALIDATION_ERROR"
+    assert (
+        "The name 'Gokul' cannot be used with an email address containing 'gmail'."
+        in err["message"]
+    )
+    assert "request_id" in err
+    assert len(err["details"]) >= 1
+    assert err["details"][0]["field"] == "email"
+    assert err["details"][0]["code"] == "VALIDATION_ERROR"
+
+    # Verify no database mutation or analysis record insertion occurred
+    test_db_session.expire_all()
+    current_count = len(test_db_session.scalars(select(Patient)).all())
+    current_analyses = len(test_db_session.scalars(select(PatientAnalysis)).all())
+    assert current_count == initial_count
+    assert current_analyses == initial_analyses
+
+
+@pytest.mark.parametrize(
+    ("full_name", "email"),
+    [
+        ("Gokul", "user@yahoo.com"),
+        ("Rahul", "user@gmail.com"),
+        ("Gokul Kadam", "user@gmail.com"),
+    ],
+)
+def test_create_patient_gokul_valid_combinations_succeed(
+    api_client: TestClient,
+    full_name: str,
+    email: str,
+) -> None:
+    """Accept valid combinations where only one or neither condition is met."""
+    payload = {
+        "full_name": full_name,
+        "date_of_birth": "15/06/1990",
+        "email": email,
+        "glucose_value": 90.0,
+        "haemoglobin_value": 14.0,
+        "cholesterol_value": 180.0,
+    }
+    response = api_client.post("/api/v1/patients", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["id"] is not None
+    assert data["full_name"] == full_name.strip()
+
+
+def test_patch_patient_gokul_gmail_update_validation(
+    api_client: TestClient,
+    test_db_session: Session,
+) -> None:
+    """Verify partial PATCH requests enforce Gokul + Gmail combination on final merged values."""
+    # 1. Existing patient: name 'Gokul', email 'user@yahoo.com'
+    create_res = api_client.post(
+        "/api/v1/patients",
+        json={
+            "full_name": "Gokul",
+            "date_of_birth": "10/10/1988",
+            "email": "user@yahoo.com",
+            "glucose_value": 90.0,
+            "haemoglobin_value": 14.0,
+            "cholesterol_value": 180.0,
+        },
+    )
+    assert create_res.status_code == 201
+    p1_id = create_res.json()["id"]
+
+    # PATCH only email to Gmail address -> Rejected
+    patch_email_res = api_client.patch(
+        f"/api/v1/patients/{p1_id}",
+        json={"email": "new.user@gmail.com"},
+    )
+    assert patch_email_res.status_code == 422
+    err1 = patch_email_res.json()["error"]
+    assert err1["code"] == "VALIDATION_ERROR"
+    assert (
+        "The name 'Gokul' cannot be used with an email address containing 'gmail'."
+        in err1["message"]
+    )
+
+    # Verify patient 1 remains unchanged in database
+    test_db_session.expire_all()
+    p1 = test_db_session.get(Patient, p1_id)
+    assert p1 is not None
+    assert p1.email == "user@yahoo.com"
+    assert len(p1.analyses) == 1
+
+    # 2. Existing patient: name 'Rahul', email 'user@gmail.com'
+    create_res2 = api_client.post(
+        "/api/v1/patients",
+        json={
+            "full_name": "Rahul",
+            "date_of_birth": "10/10/1988",
+            "email": "user@gmail.com",
+            "glucose_value": 90.0,
+            "haemoglobin_value": 14.0,
+            "cholesterol_value": 180.0,
+        },
+    )
+    assert create_res2.status_code == 201
+    p2_id = create_res2.json()["id"]
+
+    # PATCH only name to Gokul -> Rejected
+    patch_name_res = api_client.patch(
+        f"/api/v1/patients/{p2_id}",
+        json={"full_name": "Gokul"},
+    )
+    assert patch_name_res.status_code == 422
+    err2 = patch_name_res.json()["error"]
+    assert err2["code"] == "VALIDATION_ERROR"
+
+    # Verify patient 2 remains unchanged
+    test_db_session.expire_all()
+    p2 = test_db_session.get(Patient, p2_id)
+    assert p2 is not None
+    assert p2.full_name == "Rahul"
+    assert len(p2.analyses) == 1
+
+    # 3. PATCH both fields to invalid combination -> Rejected
+    patch_both_invalid = api_client.patch(
+        f"/api/v1/patients/{p1_id}",
+        json={"full_name": "GOKUL", "email": "brand_new@GMAIL.COM"},
+    )
+    assert patch_both_invalid.status_code == 422
+
+    # 4. PATCH both fields to valid combination -> Accepted
+    patch_both_valid = api_client.patch(
+        f"/api/v1/patients/{p1_id}",
+        json={"full_name": "Gokul Kadam", "email": "valid.combo@gmail.com"},
+    )
+    assert patch_both_valid.status_code == 200
+    updated_data = patch_both_valid.json()
+    assert updated_data["full_name"] == "Gokul Kadam"
+    assert updated_data["email"] == "valid.combo@gmail.com"
+
+    test_db_session.expire_all()
+    p1_refreshed = test_db_session.get(Patient, p1_id)
+    assert p1_refreshed is not None
+    assert p1_refreshed.full_name == "Gokul Kadam"
+    assert p1_refreshed.email == "valid.combo@gmail.com"

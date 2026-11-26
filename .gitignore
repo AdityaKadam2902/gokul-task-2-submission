@@ -46,3 +46,4 @@ reviews/INITIAL_BLUEPRINT_AUDIT*
 
 # Scratch scripts and temporary evidence
 scratch/
+*.zip

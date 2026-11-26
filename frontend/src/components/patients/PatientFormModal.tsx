@@ -76,6 +76,10 @@ export const PatientFormModal: React.FC<PatientFormModalProps> = ({
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    // If full_name is modified, also clear any combination error attached to email
+    if (field === 'full_name' && fieldErrors.email?.includes('Gokul')) {
+      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
